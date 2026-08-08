@@ -3,17 +3,30 @@ import { FlatList, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { VeloraText } from '@components/atoms/VeloraText';
 import { useTheme } from '@hooks/useTheme';
+import { useAppSelector } from '@hooks/useAppDispatch';
 import { spacing, radius, shadow } from '@theme/spacing';
-
-const TRIPS = [
-  { id: '1', from: 'F-7 Markaz', to: 'Islamabad Airport', date: 'Aug 7, 2026', fare: 'PKR 2,400', status: 'Completed' },
-  { id: '2', from: 'Blue Area', to: 'DHA Phase 2', date: 'Aug 5, 2026', fare: 'PKR 1,850', status: 'Completed' },
-  { id: '3', from: 'Islamabad', to: 'Lahore', date: 'Aug 1, 2026', fare: 'PKR 24,500', status: 'Completed' },
-];
+import { formatFare } from '@utils/locations';
 
 export function HistoryScreen() {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
+  const history = useAppSelector(state => state.ride.history);
+
+  const trips = history
+    .filter(ride => ride.status === 'completed')
+    .map(ride => ({
+      id: ride.id,
+      from: ride.pickup.address,
+      to: ride.dropoff.address,
+      date: new Date(ride.createdAt).toLocaleDateString('en-PK', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      }),
+      fare: formatFare(ride.fare),
+      status: 'Completed',
+    }))
+    .reverse();
 
   return (
     <View style={[styles.flex, { backgroundColor: theme.colors.background }]}>
@@ -25,9 +38,14 @@ export function HistoryScreen() {
       </View>
 
       <FlatList
-        data={TRIPS}
+        data={trips}
         keyExtractor={item => item.id}
         contentContainerStyle={styles.list}
+        ListEmptyComponent={
+          <VeloraText variant="caption" color={theme.colors.textMuted}>
+            No completed trips yet.
+          </VeloraText>
+        }
         renderItem={({ item }) => (
           <View
             style={[
