@@ -32,6 +32,11 @@ export function BookC2CScreen({ navigation }: Props) {
   }, []);
 
   const dropoff = { ...ISLAMABAD_CENTER, address: destCity };
+
+  if (loading || !pickup) {
+    return <View style={styles.center}><ActivityIndicator /></View>;
+  }
+
   const breakdown = calculateFare(pickup, dropoff, { serviceType: 'city_to_city' });
 
   const handleBook = async () => {
@@ -53,10 +58,6 @@ export function BookC2CScreen({ navigation }: Props) {
       setBooking(false);
     }
   };
-
-  if (loading) {
-    return <View style={styles.center}><ActivityIndicator /></View>;
-  }
 
   return (
     <ScrollView style={{ backgroundColor: theme.colors.background }} contentContainerStyle={{ padding: spacing.xxl, paddingTop: insets.top + spacing.lg, paddingBottom: insets.bottom + spacing.xl }}>

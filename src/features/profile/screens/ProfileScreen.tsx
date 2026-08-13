@@ -68,9 +68,10 @@ export function ProfileScreen() {
   };
 
   return (
-    <ScrollView
-      style={[styles.flex, { backgroundColor: theme.colors.background }]}
-      contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}>
+    <View style={[styles.flex, { backgroundColor: theme.colors.background }]}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}>
       <View style={[styles.header, { paddingTop: insets.top + spacing.lg }]}>
         <View style={[styles.avatar, { backgroundColor: theme.colors.primary }]}>
           <VeloraText variant="h1" color={theme.colors.textOnPrimary}>
@@ -108,7 +109,8 @@ export function ProfileScreen() {
       <Pressable style={styles.delete} onPress={handleDelete}>
         <VeloraText variant="caption" color={theme.colors.textMuted}>Request account deletion</VeloraText>
       </Pressable>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 

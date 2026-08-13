@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Button } from '@components/atoms/Button';
@@ -27,13 +27,18 @@ export function BookRentalScreen({ navigation }: Props) {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   const dispatch = useAppDispatch();
-  const { location: pickup } = useUserLocation();
+  const { location: pickup, loading: pickupLoading } = useUserLocation();
   const [duration, setDuration] = useState<RentalDuration>('1_day');
   const [fuel, setFuel] = useState<FuelOption>('driver');
   const [vehicleCount, setVehicleCount] = useState(1);
   const [booking, setBooking] = useState(false);
 
   const dropoff = ISLAMABAD_CENTER;
+
+  if (pickupLoading || !pickup) {
+    return <View style={styles.center}><ActivityIndicator /></View>;
+  }
+
   const breakdown = calculateFare(pickup, dropoff, { serviceType: 'rental', rentalDuration: duration, vehicleCount });
 
   const handleBook = async () => {
@@ -101,6 +106,7 @@ export function BookRentalScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   title: { marginTop: spacing.md },
   section: { marginTop: spacing.lg, marginBottom: spacing.sm },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, alignItems: 'center' },
