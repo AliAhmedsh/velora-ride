@@ -1,15 +1,17 @@
 import React from 'react';
-import { FlatList, StyleSheet, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { VeloraText } from '@components/atoms/VeloraText';
 import { useTheme } from '@hooks/useTheme';
 import { useAppSelector } from '@hooks/useAppDispatch';
+import { useMainStackNavigation } from '@navigation/useMainStackNavigation';
 import { spacing, radius, shadow } from '@theme/spacing';
 import { formatFare } from '@utils/locations';
 
 export function HistoryScreen() {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
+  const navigation = useMainStackNavigation();
   const history = useAppSelector(state => state.ride.history);
 
   const trips = history
@@ -47,7 +49,8 @@ export function HistoryScreen() {
           </VeloraText>
         }
         renderItem={({ item }) => (
-          <View
+          <Pressable
+            onPress={() => navigation.navigate('Receipt', { rideId: item.id })}
             style={[
               styles.card,
               shadow.sm,
@@ -64,7 +67,12 @@ export function HistoryScreen() {
               <VeloraText variant="caption" color={theme.colors.textMuted}>{item.date}</VeloraText>
               <VeloraText variant="bodyMedium" color={theme.colors.primary}>{item.fare}</VeloraText>
             </View>
-          </View>
+            <Pressable
+              onPress={() => navigation.navigate('BookRide')}
+              style={[styles.rebookBtn, { borderColor: theme.colors.primary }]}>
+              <VeloraText variant="caption" color={theme.colors.primary}>Book again</VeloraText>
+            </Pressable>
+          </Pressable>
         )}
       />
     </View>
@@ -84,4 +92,12 @@ const styles = StyleSheet.create({
   cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   to: { marginTop: spacing.xs, marginBottom: spacing.md },
   cardBottom: { flexDirection: 'row', justifyContent: 'space-between' },
+  rebookBtn: {
+    marginTop: spacing.md,
+    alignSelf: 'flex-start',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.full,
+    borderWidth: 1,
+  },
 });

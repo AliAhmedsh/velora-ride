@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import LinearGradient from 'react-native-linear-gradient';
 import Animated, {
   useAnimatedStyle,
@@ -43,14 +43,8 @@ export function WelcomeScreen() {
             <VeloraText variant="hero" color={theme.colors.accent}>V</VeloraText>
           </View>
         </Animated.View>
-        <VeloraText variant="hero" color={theme.colors.textOnPrimary} align="center">
-          Velora
-        </VeloraText>
-        <VeloraText
-          variant="h3"
-          color={theme.colors.brown200}
-          align="center"
-          style={styles.tagline}>
+        <VeloraText variant="hero" color={theme.colors.textOnPrimary} align="center">Velora</VeloraText>
+        <VeloraText variant="h3" color={theme.colors.brown200} align="center" style={styles.tagline}>
           Premium rides, crafted for you
         </VeloraText>
         <View style={styles.divider} />
@@ -60,7 +54,7 @@ export function WelcomeScreen() {
       </View>
 
       <View style={styles.footer}>
-        <Button label="Get Started" fullWidth onPress={() => navigation.navigate('Phone')} />
+        <Button label="Get started" fullWidth onPress={() => navigation.navigate('SignUp')} />
       </View>
     </LinearGradient>
   );
@@ -100,8 +94,5 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     marginBottom: spacing.lg,
   },
-  footer: {
-    paddingHorizontal: spacing.xxl,
-    paddingBottom: spacing.massive,
-  },
+  footer: { paddingHorizontal: spacing.xxl, paddingBottom: spacing.massive },
 });

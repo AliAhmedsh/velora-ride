@@ -1,22 +1,40 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View, Pressable } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useMainStackNavigation } from '@navigation/useMainStackNavigation';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import { VeloraText } from '@components/atoms/VeloraText';
 import { ServiceCard } from '@components/molecules/ServiceCard';
 import { useTheme } from '@hooks/useTheme';
 import { useAppSelector } from '@hooks/useAppDispatch';
-import { MainStackParamList } from '@navigation/types';
 import { spacing, radius, shadow } from '@theme/spacing';
 import { formatFare } from '@utils/locations';
+import { unreadNotificationCount } from '../../../services/notificationService';
+import { fetchProfile } from '../../../services/profileService';
 
 export function HomeScreen() {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
-  const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
+  const navigation = useMainStackNavigation();
   const { activeRide, history } = useAppSelector(state => state.ride);
+  const [unread, setUnread] = useState(0);
+  const [firstName, setFirstName] = useState('there');
+
+  useEffect(() => {
+    unreadNotificationCount().then(setUnread).catch(() => {});
+    fetchProfile()
+      .then(p => {
+        if (p?.full_name) setFirstName(p.full_name.split(' ')[0]);
+      })
+      .catch(() => {});
+  }, []);
+
+  const greeting = (() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  })();
 
   const recentTrips = history.slice(-2).reverse().map(ride => ({
     id: ride.id,
@@ -25,7 +43,6 @@ export function HomeScreen() {
     fare: formatFare(ride.fare),
   }));
 
-  const goToBook = () => navigation.navigate('BookRide');
 
   return (
     <View style={[styles.flex, { backgroundColor: theme.colors.background }]}>
@@ -35,14 +52,26 @@ export function HomeScreen() {
         <View style={styles.headerRow}>
           <View>
             <VeloraText variant="caption" color="rgba(250,247,242,0.75)">
-              Good morning
+              {greeting}
             </VeloraText>
             <VeloraText variant="h2" color={theme.colors.textOnPrimary}>
-              Ali Ahmed
+              {firstName}
             </VeloraText>
           </View>
-          <View style={[styles.avatar, { backgroundColor: theme.colors.accent }]}>
-            <VeloraText variant="h3" color={theme.colors.textOnPrimary}>A</VeloraText>
+          <View style={styles.headerActions}>
+            <Pressable
+              onPress={() => navigation.navigate('Notifications')}
+              style={[styles.bellWrap, { backgroundColor: 'rgba(255,255,255,0.15)' }]}>
+              <VeloraText variant="h3" color={theme.colors.textOnPrimary}>🔔</VeloraText>
+              {unread > 0 && (
+                <View style={[styles.badge, { backgroundColor: theme.colors.accent }]}>
+                  <VeloraText variant="caption" color={theme.colors.textOnPrimary}>{unread}</VeloraText>
+                </View>
+              )}
+            </Pressable>
+            <View style={[styles.avatar, { backgroundColor: theme.colors.accent }]}>
+              <VeloraText variant="h3" color={theme.colors.textOnPrimary}>{firstName.charAt(0).toUpperCase()}</VeloraText>
+            </View>
           </View>
         </View>
       </LinearGradient>
@@ -67,30 +96,12 @@ export function HomeScreen() {
           </Pressable>
         )}
 
-        <ServiceCard
-          featured
-          title="Where to?"
-          subtitle="Book a premium local ride in seconds"
-          icon="→"
-          onPress={goToBook}
-        />
+        <ServiceCard featured title="LOCAL" subtitle="Book a premium local ride in seconds" icon="→" onPress={() => navigation.navigate('BookRide')} />
 
         <View style={styles.serviceRow}>
-          <ServiceCard
-            title="City to City"
-            subtitle="Inter-city travel"
-            icon="◎"
-            accentColor={theme.colors.accent}
-            onPress={goToBook}
-          />
+          <ServiceCard title="CITY TO CITY" subtitle="Inter-city travel" icon="◎" accentColor={theme.colors.accent} onPress={() => navigation.navigate('BookC2C')} />
           <View style={styles.gap} />
-          <ServiceCard
-            title="Rental"
-            subtitle="With driver"
-            icon="◆"
-            accentColor={theme.colors.primaryLight}
-            onPress={goToBook}
-          />
+          <ServiceCard title="RENTAL" subtitle="With driver · Contract" icon="◆" accentColor={theme.colors.primaryLight} onPress={() => navigation.navigate('BookRental')} />
         </View>
 
         <VeloraText variant="h3" style={styles.sectionTitle}>Recent trips</VeloraText>
@@ -139,6 +150,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  bellWrap: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  badge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 3,
   },
   avatar: {
     width: 48,

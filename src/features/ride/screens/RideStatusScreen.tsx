@@ -1,5 +1,5 @@
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { useEffect } from 'react';
+import { ActivityIndicator, Alert, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Button } from '@components/atoms/Button';
@@ -7,10 +7,11 @@ import { VeloraText } from '@components/atoms/VeloraText';
 import { RideMap } from '@components/organisms/RideMap';
 import { useTheme } from '@hooks/useTheme';
 import { useAppDispatch, useAppSelector } from '@hooks/useAppDispatch';
-import { cancelRide, clearCompletedRide } from '@store';
+import { cancelRide, dismissCompletedRide } from '@store';
 import { MainStackParamList } from '@navigation/types';
 import { spacing, radius, shadow } from '@theme/spacing';
-import { formatFare } from '@utils/locations';
+import { formatFare } from '../../../services/fareEngine';
+import { triggerSos } from '../../../services/safetyService';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'RideStatus'>;
 
@@ -23,15 +24,30 @@ const STATUS_LABELS: Record<string, string> = {
   cancelled: 'Trip cancelled',
 };
 
+const SERVICE_LABELS: Record<string, string> = {
+  local: 'Local ride',
+  city_to_city: 'City to City',
+  rental: 'Rental',
+};
+
 export function RideStatusScreen({ navigation }: Props) {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   const dispatch = useAppDispatch();
   const ride = useAppSelector(state => state.ride.activeRide);
 
+  useEffect(() => {
+    if (!ride) {
+      navigation.replace('MainTabs');
+    }
+  }, [ride, navigation]);
+
   if (!ride) {
-    navigation.replace('MainTabs');
-    return null;
+    return (
+      <View style={[styles.flex, styles.loading, { backgroundColor: theme.colors.background }]}>
+        <ActivityIndicator color={theme.colors.primary} />
+      </View>
+    );
   }
 
   const isSearching = ride.status === 'searching';
@@ -44,8 +60,17 @@ export function RideStatusScreen({ navigation }: Props) {
   };
 
   const handleDone = async () => {
-    await dispatch(clearCompletedRide());
-    navigation.replace('MainTabs');
+    await dispatch(dismissCompletedRide());
+    navigation.replace('RateRide', { rideId: ride.id, driverId: ride.driverId });
+  };
+
+  const handleSos = async () => {
+    try {
+      await triggerSos(ride.id, ride.pickup.latitude, ride.pickup.longitude);
+      Alert.alert('SOS sent', 'Emergency team has been notified.');
+    } catch {
+      Alert.alert('SOS failed', 'Could not send alert. Call emergency services.');
+    }
   };
 
   return (
@@ -54,47 +79,57 @@ export function RideStatusScreen({ navigation }: Props) {
         <RideMap pickup={ride.pickup} dropoff={ride.dropoff} showRoute />
       </View>
 
-      <View
-        style={[
-          styles.sheet,
-          shadow.lg,
-          {
-            backgroundColor: theme.colors.card,
-            paddingBottom: insets.bottom + spacing.lg,
-          },
-        ]}>
+      <View style={[styles.sheet, shadow.lg, { backgroundColor: theme.colors.card, paddingBottom: insets.bottom + spacing.lg }]}>
+        <VeloraText variant="caption" color={theme.colors.textSecondary}>
+          {SERVICE_LABELS[ride.serviceType] ?? ride.serviceType}
+        </VeloraText>
         <VeloraText variant="h3" style={styles.statusTitle}>
           {STATUS_LABELS[ride.status] ?? ride.status}
         </VeloraText>
 
         <View style={styles.route}>
           <VeloraText variant="bodyMedium">{ride.pickup.address}</VeloraText>
-          <VeloraText variant="caption" color={theme.colors.textSecondary}>
-            → {ride.dropoff.address}
-          </VeloraText>
+          <VeloraText variant="caption" color={theme.colors.textSecondary}>→ {ride.dropoff.address}</VeloraText>
         </View>
 
         <View style={[styles.fareRow, { borderColor: theme.colors.border }]}>
-          <VeloraText variant="bodyMedium">Fare</VeloraText>
+          <VeloraText variant="bodyMedium">Your offer</VeloraText>
           <VeloraText variant="h3" color={theme.colors.primary}>{formatFare(ride.fare)}</VeloraText>
         </View>
+        {ride.recommendedFare && ride.recommendedFare < ride.fare && (
+          <VeloraText variant="caption" color={theme.colors.success}>Above recommended minimum</VeloraText>
+        )}
 
         {showDriver && (
           <View style={[styles.driverCard, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
-            <VeloraText variant="bodyMedium">{ride.driverName}</VeloraText>
-            <VeloraText variant="caption" color={theme.colors.textSecondary}>
-              {ride.driverRating} ★ · Premium driver
-            </VeloraText>
+            <View style={styles.driverRow}>
+              <View>
+                <VeloraText variant="bodyMedium">{ride.driverName}</VeloraText>
+                <VeloraText variant="caption" color={theme.colors.textSecondary}>
+                  {ride.driverRating} ★ · Platinum driver
+                </VeloraText>
+              </View>
+              <Pressable onPress={() => navigation.navigate('Chat', { rideId: ride.id })}>
+                <VeloraText variant="label" color={theme.colors.primary}>Chat</VeloraText>
+              </Pressable>
+            </View>
           </View>
         )}
 
-        {isSearching && (
-          <Button label="Cancel request" variant="outline" fullWidth onPress={handleCancel} />
+        {isSearching && ride.negotiationEnabled !== false && (
+          <Button
+            label="View driver offers"
+            variant="secondary"
+            fullWidth
+            onPress={() => navigation.navigate('RideOffers', { rideId: ride.id })}
+            style={styles.offersBtn}
+          />
         )}
 
-        {isCompleted && (
-          <Button label="Done" fullWidth onPress={handleDone} />
-        )}
+        <Button label="SOS Emergency" variant="outline" fullWidth onPress={handleSos} style={styles.sos} />
+
+        {isSearching && <Button label="Cancel request" variant="outline" fullWidth onPress={handleCancel} />}
+        {isCompleted && <Button label="Rate & finish" fullWidth onPress={handleDone} />}
       </View>
     </View>
   );
@@ -102,28 +137,14 @@ export function RideStatusScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  loading: { alignItems: 'center', justifyContent: 'center' },
   mapWrap: { flex: 1 },
-  sheet: {
-    borderTopLeftRadius: radius.xxl,
-    borderTopRightRadius: radius.xxl,
-    paddingHorizontal: spacing.xxl,
-    paddingTop: spacing.lg,
-  },
+  sheet: { borderTopLeftRadius: radius.xxl, borderTopRightRadius: radius.xxl, paddingHorizontal: spacing.xxl, paddingTop: spacing.lg },
   statusTitle: { marginBottom: spacing.md },
   route: { marginBottom: spacing.md },
-  fareRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-    marginBottom: spacing.md,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-  },
-  driverCard: {
-    padding: spacing.lg,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    marginBottom: spacing.lg,
-  },
+  fareRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: spacing.md, borderTopWidth: 1, borderBottomWidth: 1, marginBottom: spacing.sm },
+  driverCard: { padding: spacing.lg, borderRadius: radius.lg, borderWidth: 1, marginBottom: spacing.md },
+  driverRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  offersBtn: { marginBottom: spacing.md },
+  sos: { marginBottom: spacing.md, borderColor: '#C45C4A' },
 });
