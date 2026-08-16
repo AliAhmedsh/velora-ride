@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { ScreenHeader } from '@components/molecules/ScreenHeader';
 import { VeloraText } from '@components/atoms/VeloraText';
 import { useTheme } from '@hooks/useTheme';
 import { MainStackParamList } from '@navigation/types';
@@ -49,14 +50,11 @@ export function NotificationsScreen({ navigation }: Props) {
   };
 
   return (
-    <View style={[styles.flex, { backgroundColor: theme.colors.background, paddingTop: insets.top + spacing.md }]}>
-      <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()}>
-          <VeloraText variant="label" color={theme.colors.primary}>← Back</VeloraText>
-        </Pressable>
-        <VeloraText variant="h2" style={styles.title}>Notifications</VeloraText>
-        <Pressable onPress={() => markAllNotificationsRead().then(load)}>
-          <VeloraText variant="label" color={theme.colors.textSecondary}>Mark all read</VeloraText>
+    <View style={[styles.flex, { backgroundColor: theme.colors.background }]}>
+      <View style={{ paddingHorizontal: spacing.xxl }}>
+        <ScreenHeader title="Notifications" onBack={() => navigation.goBack()} />
+        <Pressable onPress={() => markAllNotificationsRead().then(load)} style={styles.markAll}>
+          <VeloraText variant="label" color={theme.colors.primary}>Mark all read</VeloraText>
         </Pressable>
       </View>
 
@@ -98,14 +96,7 @@ export function NotificationsScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.xxl,
-    paddingBottom: spacing.lg,
-  },
-  title: { flex: 1, marginLeft: spacing.md },
+  markAll: { alignSelf: 'flex-end', marginBottom: spacing.sm, paddingVertical: spacing.xs },
   list: { paddingHorizontal: spacing.xxl },
   empty: { textAlign: 'center', marginTop: spacing.huge },
   card: {

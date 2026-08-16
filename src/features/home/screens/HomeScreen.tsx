@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, View, Pressable } from 'react-native';
+import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useMainStackNavigation } from '@navigation/useMainStackNavigation';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import LinearGradient from 'react-native-linear-gradient';
+import { GradientBackdrop } from '@components/atoms/GradientBackdrop';
 import { VeloraText } from '@components/atoms/VeloraText';
 import { ServiceCard } from '@components/molecules/ServiceCard';
 import { useTheme } from '@hooks/useTheme';
@@ -46,54 +46,63 @@ export function HomeScreen() {
 
   return (
     <View style={[styles.flex, { backgroundColor: theme.colors.background }]}>
-      <LinearGradient
-        colors={[theme.colors.gradientStart, theme.colors.background]}
-        style={[styles.header, { paddingTop: insets.top + spacing.lg }]}>
+      <View
+        style={[
+          styles.header,
+          { paddingTop: insets.top + spacing.lg, backgroundColor: theme.colors.primaryDark },
+        ]}>
+        <GradientBackdrop colors={[theme.colors.primaryDark, theme.colors.primary]} />
         <View style={styles.headerRow}>
           <View>
-            <VeloraText variant="caption" color="rgba(250,247,242,0.75)">
+            <VeloraText variant="caption" color={theme.colors.brown200}>
               {greeting}
             </VeloraText>
-            <VeloraText variant="h2" color={theme.colors.textOnPrimary}>
+            <VeloraText variant="h2" color={theme.colors.white}>
               {firstName}
             </VeloraText>
           </View>
           <View style={styles.headerActions}>
-            <Pressable
+            <TouchableOpacity
+              activeOpacity={0.8}
+              delayPressIn={0}
               onPress={() => navigation.navigate('Notifications')}
-              style={[styles.bellWrap, { backgroundColor: 'rgba(255,255,255,0.15)' }]}>
-              <VeloraText variant="h3" color={theme.colors.textOnPrimary}>🔔</VeloraText>
+              style={[styles.bellWrap, { backgroundColor: 'rgba(255,255,255,0.18)' }]}>
+              <VeloraText variant="h3" color={theme.colors.white}>🔔</VeloraText>
               {unread > 0 && (
                 <View style={[styles.badge, { backgroundColor: theme.colors.accent }]}>
-                  <VeloraText variant="caption" color={theme.colors.textOnPrimary}>{unread}</VeloraText>
+                  <VeloraText variant="caption" color={theme.colors.white}>{unread}</VeloraText>
                 </View>
               )}
-            </Pressable>
+            </TouchableOpacity>
             <View style={[styles.avatar, { backgroundColor: theme.colors.accent }]}>
-              <VeloraText variant="h3" color={theme.colors.textOnPrimary}>{firstName.charAt(0).toUpperCase()}</VeloraText>
+              <VeloraText variant="h3" color={theme.colors.white}>{firstName.charAt(0).toUpperCase()}</VeloraText>
             </View>
           </View>
         </View>
-      </LinearGradient>
+      </View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 100 }]}>
+        keyboardShouldPersistTaps="handled"
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 96 }]}>
         {activeRide && activeRide.status !== 'completed' && activeRide.status !== 'cancelled' && (
-          <Pressable
+          <TouchableOpacity
+            activeOpacity={0.9}
+            delayPressIn={0}
             onPress={() => navigation.navigate('RideStatus')}
             style={[
               styles.activeBanner,
               shadow.sm,
               { backgroundColor: theme.colors.primary, borderColor: theme.colors.border },
             ]}>
-            <VeloraText variant="label" color={theme.colors.textOnPrimary}>
+            <VeloraText variant="label" color={theme.colors.white}>
               Active ride · Tap to view
             </VeloraText>
             <VeloraText variant="caption" color={theme.colors.brown200}>
               {activeRide.pickup.address} → {activeRide.dropoff.address}
             </VeloraText>
-          </Pressable>
+          </TouchableOpacity>
         )}
 
         <ServiceCard featured title="LOCAL" subtitle="Book a premium local ride in seconds" icon="→" onPress={() => navigation.navigate('BookRide')} />
@@ -112,8 +121,10 @@ export function HomeScreen() {
           </VeloraText>
         ) : (
           recentTrips.map(trip => (
-            <Pressable
+            <TouchableOpacity
               key={trip.id}
+              activeOpacity={0.9}
+              delayPressIn={0}
               style={[
                 styles.tripCard,
                 shadow.sm,
@@ -130,7 +141,7 @@ export function HomeScreen() {
                 </VeloraText>
               </View>
               <VeloraText variant="label" color={theme.colors.primary}>{trip.fare}</VeloraText>
-            </Pressable>
+            </TouchableOpacity>
           ))
         )}
       </ScrollView>
@@ -141,15 +152,18 @@ export function HomeScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   header: {
-    paddingHorizontal: spacing.xxl,
-    paddingBottom: spacing.xxl,
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing.xl,
     borderBottomLeftRadius: radius.xxl,
     borderBottomRightRadius: radius.xxl,
+    flexShrink: 0,
+    overflow: 'hidden',
   },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    zIndex: 1,
   },
   headerActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   bellWrap: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
@@ -171,7 +185,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  scroll: { paddingHorizontal: spacing.xxl, paddingTop: spacing.lg },
+  scroll: { paddingHorizontal: spacing.xl, paddingTop: spacing.lg },
   activeBanner: {
     padding: spacing.lg,
     borderRadius: radius.lg,

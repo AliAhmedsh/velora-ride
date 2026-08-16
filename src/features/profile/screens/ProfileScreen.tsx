@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, View, Pressable } from 'react-native';
+import { Alert, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMainStackNavigation } from '@navigation/useMainStackNavigation';
 import { VeloraText } from '@components/atoms/VeloraText';
@@ -71,24 +71,28 @@ export function ProfileScreen() {
     <View style={[styles.flex, { backgroundColor: theme.colors.background }]}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}>
+        keyboardShouldPersistTaps="handled"
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={{ paddingBottom: insets.bottom + 96 }}>
       <View style={[styles.header, { paddingTop: insets.top + spacing.lg }]}>
         <View style={[styles.avatar, { backgroundColor: theme.colors.primary }]}>
-          <VeloraText variant="h1" color={theme.colors.textOnPrimary}>
+          <VeloraText variant="h1" color={theme.colors.white}>
             {name.charAt(0).toUpperCase()}
           </VeloraText>
         </View>
         <VeloraText variant="h2" style={styles.name}>{name}</VeloraText>
         <VeloraText variant="body" color={theme.colors.textSecondary}>{phone}</VeloraText>
-        <VeloraText variant="caption" color={theme.colors.accent} style={styles.tier}>
+        <VeloraText variant="caption" color={theme.colors.textSecondary} style={styles.tier}>
           {tier} tier
         </VeloraText>
       </View>
 
       <View style={styles.menu}>
         {menu.map(item => (
-          <Pressable
+          <TouchableOpacity
             key={item.label}
+            activeOpacity={0.85}
+            delayPressIn={0}
             onPress={item.action}
             style={[
               styles.menuItem,
@@ -96,19 +100,24 @@ export function ProfileScreen() {
               { backgroundColor: theme.colors.card, borderColor: theme.colors.border },
             ]}>
             <VeloraText variant="bodyMedium" style={styles.menuLabel}>{item.label}</VeloraText>
-            {item.value ? (
-              <VeloraText variant="caption" color={theme.colors.textMuted}>{item.value}</VeloraText>
-            ) : null}
-          </Pressable>
+            <View style={styles.menuRight}>
+              {item.value ? (
+                <VeloraText variant="caption" color={theme.colors.textSecondary}>{item.value}</VeloraText>
+              ) : null}
+              {(item.label === 'Help & Support' || item.label === 'Notifications') ? (
+                <VeloraText variant="body" color={theme.colors.textMuted}> ›</VeloraText>
+              ) : null}
+            </View>
+          </TouchableOpacity>
         ))}
       </View>
 
-      <Pressable style={styles.logout} onPress={signOut}>
+      <TouchableOpacity activeOpacity={0.85} delayPressIn={0} style={styles.logout} onPress={signOut}>
         <VeloraText variant="bodyMedium" color={theme.colors.error}>Log out</VeloraText>
-      </Pressable>
-      <Pressable style={styles.delete} onPress={handleDelete}>
+      </TouchableOpacity>
+      <TouchableOpacity activeOpacity={0.85} delayPressIn={0} style={styles.delete} onPress={handleDelete}>
         <VeloraText variant="caption" color={theme.colors.textMuted}>Request account deletion</VeloraText>
-      </Pressable>
+      </TouchableOpacity>
       </ScrollView>
     </View>
   );
@@ -137,6 +146,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   menuLabel: { flex: 1 },
+  menuRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   logout: { alignItems: 'center', paddingVertical: spacing.xxxl },
   delete: { alignItems: 'center', paddingBottom: spacing.xl },
 });

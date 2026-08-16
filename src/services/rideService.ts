@@ -3,6 +3,7 @@ import type { Ride, RideLocation, RideStatus } from '../types/ride';
 import type { BookingRequest } from '../types/booking';
 import { APP_CONFIG } from '../config/app';
 import { getCurrentUserId } from './authService';
+import { getRideServiceMultiplier, getRideServiceType, isRideTypeAllowedForService } from '../data/rideServiceTypes';
 import { calculateFare } from './fareEngine';
 
 export function mapDbRideToRide(row: DbRide): Ride {
@@ -92,6 +93,21 @@ export async function fetchRideHistory(): Promise<Ride[]> {
   return (data as DbRide[]).map(mapDbRideToRide);
 }
 
+async function resolveVehicleCategory(slug?: string) {
+  if (!slug) return { id: undefined as string | undefined, multiplier: 1 };
+  const localMultiplier = getRideServiceMultiplier(slug);
+  const { data, error } = await supabase
+    .from('vehicle_categories')
+    .select('id, base_multiplier')
+    .eq('slug', slug)
+    .eq('is_active', true)
+    .maybeSingle();
+  if (error || !data) {
+    return { id: undefined, multiplier: localMultiplier };
+  }
+  return { id: data.id as string, multiplier: Number(data.base_multiplier) || localMultiplier };
+}
+
 export async function createBooking(request: BookingRequest) {
   const userId = await getCurrentUserId();
   if (!userId) throw new Error('Not authenticated');
@@ -100,17 +116,40 @@ export async function createBooking(request: BookingRequest) {
     throw new Error('Offer cannot be below recommended fare');
   }
 
+  if (
+    request.vehicleCategorySlug &&
+    !isRideTypeAllowedForService(request.vehicleCategorySlug, request.serviceType)
+  ) {
+    throw new Error('This ride type is not available for inter-city trips. Choose Car or AC Car.');
+  }
+
+  const [{ id: vehicleCategoryId, multiplier: vehicleMultiplier }, profileResult] = await Promise.all([
+    resolveVehicleCategory(request.vehicleCategorySlug),
+    supabase.from('profiles').select('full_name').eq('id', userId).maybeSingle(),
+  ]);
+
   const breakdown = calculateFare(request.pickup, request.dropoff, {
     serviceType: request.serviceType,
     rentalDuration: request.rentalDuration,
     vehicleCount: request.vehicleCount,
+    vehicleMultiplier,
+    stopCount: request.stops?.length ?? 0,
   });
+
+  const riderName = profileResult.data?.full_name ?? APP_CONFIG.defaultName;
+  const rideType = request.vehicleCategorySlug ? getRideServiceType(request.vehicleCategorySlug) : undefined;
+  const requirements = [
+    request.specialRequirements,
+    rideType && !vehicleCategoryId ? `Ride type: ${rideType.name}` : undefined,
+  ]
+    .filter(Boolean)
+    .join(' · ');
 
   const { data, error } = await supabase
     .from('rides')
     .insert({
       rider_id: userId,
-      rider_name: APP_CONFIG.defaultName,
+      rider_name: riderName,
       service_type: request.serviceType,
       pickup_address: request.pickup.address,
       pickup_lat: request.pickup.latitude,
@@ -127,11 +166,12 @@ export async function createBooking(request: BookingRequest) {
       fuel_option: request.fuelOption,
       rental_duration: request.rentalDuration,
       vehicle_count: request.vehicleCount ?? 1,
+      vehicle_category_id: vehicleCategoryId,
       distance_km: breakdown.distanceKm,
       duration_min: breakdown.durationMin,
       payment_method: request.paymentMethod ?? 'cash',
       status: request.scheduledAt ? 'scheduled' : 'searching',
-      special_requirements: request.specialRequirements,
+      special_requirements: requirements || undefined,
       women_only: request.womenOnly ?? false,
       ac_preference: request.acPreference ?? 'any',
       negotiation_enabled: request.negotiationEnabled ?? true,
@@ -146,8 +186,13 @@ export async function createBooking(request: BookingRequest) {
   const ride = mapDbRideToRide(data as DbRide);
 
   if (request.paymentMethod === 'wallet') {
-    const { payRideWithWallet } = await import('./paymentService');
-    await payRideWithWallet(ride.id, request.customerOffer);
+    try {
+      const { payRideWithWallet } = await import('./paymentService');
+      await payRideWithWallet(ride.id, request.customerOffer);
+    } catch (walletError) {
+      await supabase.from('rides').update({ status: 'cancelled' }).eq('id', ride.id);
+      throw walletError;
+    }
   }
 
   if (request.promoCode) {

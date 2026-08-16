@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import LinearGradient from 'react-native-linear-gradient';
 import { VeloraText } from '@components/atoms/VeloraText';
 import { Button } from '@components/atoms/Button';
+import { GradientBackdrop } from '@components/atoms/GradientBackdrop';
 import { useTheme } from '@hooks/useTheme';
 import { spacing, radius, shadow } from '@theme/spacing';
 import { fetchWalletBalance, fetchWalletTransactions } from '../../../services/walletService';
@@ -52,16 +52,23 @@ export function WalletScreen() {
 
   return (
     <View style={[styles.flex, { backgroundColor: theme.colors.background }]}>
-      <LinearGradient
-        colors={[theme.colors.gradientStart, theme.colors.gradientEnd]}
-        style={[styles.hero, { paddingTop: insets.top + spacing.xl }]}>
-        <VeloraText variant="caption" color={theme.colors.brown200}>Wallet balance</VeloraText>
-        <VeloraText variant="hero" color={theme.colors.textOnPrimary} style={styles.balance}>
-          {formatFare(balance)}
-        </VeloraText>
-      </LinearGradient>
+      <View
+        style={[
+          styles.hero,
+          { paddingTop: insets.top + spacing.xl, backgroundColor: theme.colors.primaryDark },
+        ]}>
+        <GradientBackdrop colors={[theme.colors.primaryDark, theme.colors.primary]} />
+        <View style={styles.heroContent}>
+          <VeloraText variant="caption" color={theme.colors.brown200}>Wallet balance</VeloraText>
+          <VeloraText variant="hero" color={theme.colors.white} style={styles.balance}>
+            {formatFare(balance)}
+          </VeloraText>
+        </View>
+      </View>
 
-      <View style={styles.content}>
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 96 }]}>
         <Button
           label="Top up PKR 5,000 (Stripe)"
           fullWidth
@@ -80,7 +87,7 @@ export function WalletScreen() {
         <VeloraText variant="h3" style={styles.section}>Recent transactions</VeloraText>
 
         {transactions.length === 0 ? (
-          <VeloraText variant="caption" color={theme.colors.textMuted}>No transactions yet</VeloraText>
+          <VeloraText variant="body" color={theme.colors.textSecondary}>No transactions yet</VeloraText>
         ) : (
           transactions.map(item => (
             <View
@@ -98,7 +105,7 @@ export function WalletScreen() {
             </View>
           ))
         )}
-      </View>
+      </ScrollView>
     </View>
   );
 }
@@ -110,7 +117,9 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xxxl,
     borderBottomLeftRadius: radius.xxl,
     borderBottomRightRadius: radius.xxl,
+    overflow: 'hidden',
   },
+  heroContent: { zIndex: 1 },
   balance: { marginTop: spacing.sm },
   content: { padding: spacing.xxl },
   secondBtn: { marginTop: spacing.md },

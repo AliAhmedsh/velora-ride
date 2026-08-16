@@ -76,7 +76,7 @@ export function RideStatusScreen({ navigation }: Props) {
   return (
     <View style={[styles.flex, { backgroundColor: theme.colors.background }]}>
       <View style={styles.mapWrap}>
-        <RideMap pickup={ride.pickup} dropoff={ride.dropoff} showRoute />
+        <RideMap pickup={ride.pickup} dropoff={ride.dropoff} showRoute fullBleed />
       </View>
 
       <View style={[styles.sheet, shadow.lg, { backgroundColor: theme.colors.card, paddingBottom: insets.bottom + spacing.lg }]}>
@@ -138,7 +138,7 @@ export function RideStatusScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   loading: { alignItems: 'center', justifyContent: 'center' },
-  mapWrap: { flex: 1 },
+  mapWrap: { flex: 1, minHeight: 280 },
   sheet: { borderTopLeftRadius: radius.xxl, borderTopRightRadius: radius.xxl, paddingHorizontal: spacing.xxl, paddingTop: spacing.lg },
   statusTitle: { marginBottom: spacing.md },
   route: { marginBottom: spacing.md },

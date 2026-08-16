@@ -9,22 +9,31 @@
 /* Begin PBXBuildFile section */
 		0C80B921A6F3F58F76C31292 /* libPods-VeloraRide.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DCACB8F33CDC322A6C60F78 /* libPods-VeloraRide.a */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		164E174DBC424D25BD3690BA /* Urbanist-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A09A4C47997541E7A1614C34 /* Urbanist-Bold.ttf */; };
+		2FCE13683CD7A5B5B44B1FA8 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
+		57C9FCD9B5354B5E880EC43D /* Urbanist-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C78318584AF54F6D802E143C /* Urbanist-SemiBold.ttf */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
-		A1GM00012CA45674006654EE /* GoogleMapsConfig.generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1GM00002CA45674006654EE /* GoogleMapsConfig.generated.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+		939ADDB196F24C3AA1303177 /* Urbanist-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 45A75D74D39D4BA5AF4B5859 /* Urbanist-Medium.ttf */; };
+		A1GM00012CA45674006654EE /* GoogleMapsConfig.generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1GM00002CA45674006654EE /* GoogleMapsConfig.generated.swift */; };
+		C03B5630772D4501940427B3 /* Urbanist-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0A96AF21FE754245A5B86ECC /* Urbanist-Regular.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0A96AF21FE754245A5B86ECC /* Urbanist-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Urbanist-Regular.ttf"; path = "../src/assets/fonts/Urbanist-Regular.ttf"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* VeloraRide.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VeloraRide.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = VeloraRide/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = VeloraRide/Info.plist; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = VeloraRide/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		3B4392A12AC88292D35C810B /* Pods-VeloraRide.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-VeloraRide.debug.xcconfig"; path = "Target Support Files/Pods-VeloraRide/Pods-VeloraRide.debug.xcconfig"; sourceTree = "<group>"; };
+		45A75D74D39D4BA5AF4B5859 /* Urbanist-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Urbanist-Medium.ttf"; path = "../src/assets/fonts/Urbanist-Medium.ttf"; sourceTree = "<group>"; };
 		5709B34CF0A7D63546082F79 /* Pods-VeloraRide.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-VeloraRide.release.xcconfig"; path = "Target Support Files/Pods-VeloraRide/Pods-VeloraRide.release.xcconfig"; sourceTree = "<group>"; };
 		5DCACB8F33CDC322A6C60F78 /* libPods-VeloraRide.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-VeloraRide.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = VeloraRide/AppDelegate.swift; sourceTree = "<group>"; };
-		A1GM00002CA45674006654EE /* GoogleMapsConfig.generated.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GoogleMapsConfig.generated.swift; path = VeloraRide/GoogleMapsConfig.generated.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = VeloraRide/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		A09A4C47997541E7A1614C34 /* Urbanist-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Urbanist-Bold.ttf"; path = "../src/assets/fonts/Urbanist-Bold.ttf"; sourceTree = "<group>"; };
+		A1GM00002CA45674006654EE /* GoogleMapsConfig.generated.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GoogleMapsConfig.generated.swift; path = VeloraRide/GoogleMapsConfig.generated.swift; sourceTree = "<group>"; };
+		C78318584AF54F6D802E143C /* Urbanist-SemiBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Urbanist-SemiBold.ttf"; path = "../src/assets/fonts/Urbanist-SemiBold.ttf"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -62,6 +71,18 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		6A835491347541A7A74DD906 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				A09A4C47997541E7A1614C34 /* Urbanist-Bold.ttf */,
+				0A96AF21FE754245A5B86ECC /* Urbanist-Regular.ttf */,
+				C78318584AF54F6D802E143C /* Urbanist-SemiBold.ttf */,
+				45A75D74D39D4BA5AF4B5859 /* Urbanist-Medium.ttf */,
+			);
+			name = Resources;
+			path = "";
+			sourceTree = "<group>";
+		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
@@ -77,6 +98,7 @@
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				BBD78D7AC51CEA395F1C20DB /* Pods */,
+				6A835491347541A7A74DD906 /* Resources */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -162,6 +184,11 @@
 			files = (
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
+				2FCE13683CD7A5B5B44B1FA8 /* PrivacyInfo.xcprivacy in Resources */,
+				164E174DBC424D25BD3690BA /* Urbanist-Bold.ttf in Resources */,
+				C03B5630772D4501940427B3 /* Urbanist-Regular.ttf in Resources */,
+				57C9FCD9B5354B5E880EC43D /* Urbanist-SemiBold.ttf in Resources */,
+				939ADDB196F24C3AA1303177 /* Urbanist-Medium.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -374,6 +401,10 @@
 				);
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CFLAGS = (
+					"$(inherited)",
+					"-DRCT_REMOVE_LEGACY_ARCH=1",
+				);
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
 					"-DFOLLY_NO_CONFIG",
@@ -381,8 +412,14 @@
 					"-DFOLLY_USE_LIBCPP=1",
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
+					"-DRCT_REMOVE_LEGACY_ARCH=1",
 				);
+				PODFILE_DIR = "$(SRCROOT)";
+				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
+				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
+				USE_HERMES = true;
 			};
 			name = Debug;
 		};
@@ -439,6 +476,10 @@
 					"\"$(inherited)\"",
 				);
 				MTL_ENABLE_DEBUG_INFO = NO;
+				OTHER_CFLAGS = (
+					"$(inherited)",
+					"-DRCT_REMOVE_LEGACY_ARCH=1",
+				);
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
 					"-DFOLLY_NO_CONFIG",
@@ -446,8 +487,13 @@
 					"-DFOLLY_USE_LIBCPP=1",
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
+					"-DRCT_REMOVE_LEGACY_ARCH=1",
 				);
+				PODFILE_DIR = "$(SRCROOT)";
+				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
+				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
+				USE_HERMES = true;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;

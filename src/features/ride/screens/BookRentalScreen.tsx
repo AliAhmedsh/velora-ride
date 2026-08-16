@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Button } from '@components/atoms/Button';
@@ -11,6 +11,8 @@ import { requestRide } from '@store';
 import { MainStackParamList } from '@navigation/types';
 import { spacing, radius, shadow } from '@theme/spacing';
 import { calculateFare, formatFare } from '../../../services/fareEngine';
+import { getRideErrorMessage } from '../../../utils/rideErrors';
+import { VehicleCategoryPicker } from '@components/molecules/VehicleCategoryPicker';
 import { ISLAMABAD_CENTER } from '@utils/locations';
 import type { BookingRequest, FuelOption, RentalDuration } from '../../../types/booking';
 
@@ -32,6 +34,8 @@ export function BookRentalScreen({ navigation }: Props) {
   const [fuel, setFuel] = useState<FuelOption>('driver');
   const [vehicleCount, setVehicleCount] = useState(1);
   const [booking, setBooking] = useState(false);
+  const [vehicleSlug, setVehicleSlug] = useState<string | null>(null);
+  const [vehicleMultiplier, setVehicleMultiplier] = useState(1);
 
   const dropoff = ISLAMABAD_CENTER;
 
@@ -39,15 +43,26 @@ export function BookRentalScreen({ navigation }: Props) {
     return <View style={styles.center}><ActivityIndicator /></View>;
   }
 
-  const breakdown = calculateFare(pickup, dropoff, { serviceType: 'rental', rentalDuration: duration, vehicleCount });
+  const breakdown = calculateFare(pickup, dropoff, {
+    serviceType: 'rental',
+    rentalDuration: duration,
+    vehicleCount,
+    vehicleMultiplier,
+  });
 
   const handleBook = async () => {
+    if (!vehicleSlug) {
+      Alert.alert('Select vehicle', 'Choose a vehicle type for your rental.');
+      return;
+    }
+
     const request: BookingRequest = {
       serviceType: 'rental',
       pickup,
       dropoff: { ...dropoff, address: 'As per rental agreement' },
       recommendedFare: breakdown.recommendedFare,
       customerOffer: breakdown.recommendedFare,
+      vehicleCategorySlug: vehicleSlug,
       rentalDuration: duration,
       fuelOption: fuel,
       vehicleCount,
@@ -55,8 +70,10 @@ export function BookRentalScreen({ navigation }: Props) {
     };
     setBooking(true);
     try {
-      await dispatch(requestRide(request));
+      await dispatch(requestRide(request)).unwrap();
       navigation.replace('RideStatus');
+    } catch (error) {
+      Alert.alert('Booking failed', getRideErrorMessage(error));
     } finally {
       setBooking(false);
     }
@@ -94,6 +111,15 @@ export function BookRentalScreen({ navigation }: Props) {
         <VeloraText variant="h3" style={styles.count}>{vehicleCount}</VeloraText>
         <Button label="+" variant="outline" onPress={() => setVehicleCount(Math.min(10, vehicleCount + 1))} />
       </View>
+
+      <VehicleCategoryPicker
+        value={vehicleSlug}
+        serviceType="rental"
+        onChange={(slug, multiplier) => {
+          setVehicleSlug(slug);
+          setVehicleMultiplier(multiplier);
+        }}
+      />
 
       <View style={[styles.card, shadow.sm, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
         <VeloraText variant="h2" color={theme.colors.primary}>{formatFare(breakdown.recommendedFare)}</VeloraText>

@@ -26,15 +26,17 @@ def generate_google_maps_config!(app_folder)
   key = load_dotenv['GOOGLE_MAPS_API_KEY'] || ''
   escaped = key.gsub('\\', '\\\\').gsub('"', '\\"')
   output = File.join(__dir__, app_folder, 'GoogleMapsConfig.generated.swift')
-  File.write(output, <<~SWIFT)
-    // Generated from .env by Podfile — run `pod install` after changing GOOGLE_MAPS_API_KEY
+  content = <<~SWIFT
+    // Generated from .env by Podfile
     enum GoogleMapsConfig {
       static let apiKey = "#{escaped}"
     }
-  SWIFT)
+  SWIFT
+  File.write(output, content)
 end
 
 platform :ios, min_ios_version_supported
+use_modular_headers!
 prepare_react_native_project!
 
 generate_google_maps_config!('VeloraRide')
@@ -49,7 +51,7 @@ target 'VeloraRide' do
   config = use_native_modules!
 
   rn_maps_path = '../node_modules/react-native-maps'
-  pod 'react-native-google-maps', :path => rn_maps_path
+  pod 'react-native-maps/Google', :path => rn_maps_path
 
   use_react_native!(
     :path => config[:reactNativePath],

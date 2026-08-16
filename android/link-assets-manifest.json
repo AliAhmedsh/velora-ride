@@ -1,4 +1,21 @@
 {
   "migIndex": 1,
-  "data": []
+  "data": [
+    {
+      "path": "src/assets/fonts/Urbanist-Bold.ttf",
+      "sha1": "c4e0e27da8547b8300e408a5146cfe526aeaf34c"
+    },
+    {
+      "path": "src/assets/fonts/Urbanist-Medium.ttf",
+      "sha1": "c4e0e27da8547b8300e408a5146cfe526aeaf34c"
+    },
+    {
+      "path": "src/assets/fonts/Urbanist-Regular.ttf",
+      "sha1": "c4e0e27da8547b8300e408a5146cfe526aeaf34c"
+    },
+    {
+      "path": "src/assets/fonts/Urbanist-SemiBold.ttf",
+      "sha1": "c4e0e27da8547b8300e408a5146cfe526aeaf34c"
+    }
+  ]
 }

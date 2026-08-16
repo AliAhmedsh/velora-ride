@@ -26,5 +26,9 @@ export function getRideErrorMessage(error: unknown): string {
     return 'Please sign in again, then try booking.';
   }
 
+  if (lower.includes('insufficient wallet')) {
+    return 'Wallet balance is too low. Top up in Wallet or pay with cash.';
+  }
+
   return raw;
 }

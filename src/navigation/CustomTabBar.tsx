@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Animated, Pressable, StyleSheet, View } from 'react-native';
+import { Animated, Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { VeloraText } from '@components/atoms/VeloraText';
@@ -28,7 +28,7 @@ function TabButton({
   useEffect(() => {
     Animated.spring(scale, {
       toValue: focused ? 1 : 0,
-      useNativeDriver: false,
+      useNativeDriver: true,
       speed: 20,
       bounciness: 6,
     }).start();
@@ -38,7 +38,15 @@ function TabButton({
   const pillOpacity = scale;
 
   return (
-    <Pressable onPress={onPress} style={styles.tabButton} hitSlop={10}>
+    <TouchableOpacity
+      activeOpacity={0.75}
+      delayPressIn={0}
+      onPress={onPress}
+      style={styles.tabButton}
+      hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }}
+      accessibilityRole="button"
+      accessibilityState={{ selected: focused }}
+      accessibilityLabel={label}>
       <Animated.View
         pointerEvents="none"
         style={[
@@ -52,24 +60,26 @@ function TabButton({
       />
       <VeloraText
         variant="h3"
-        color={focused ? theme.colors.textOnPrimary : theme.colors.tabBarInactive}
+        pointerEvents="none"
+        color={focused ? theme.colors.textOnPrimary : theme.colors.textSecondary}
         style={styles.icon}>
         {ICONS[label] ?? '•'}
       </VeloraText>
-    </Pressable>
+    </TouchableOpacity>
   );
 }
 
 export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
+  const bottomInset = Math.max(insets.bottom, Platform.OS === 'ios' ? spacing.md : spacing.sm);
 
   return (
     <View
       style={[
         styles.wrapper,
         {
-          paddingBottom: Math.max(insets.bottom, spacing.md),
+          paddingBottom: bottomInset,
           backgroundColor: theme.colors.background,
         },
       ]}>
@@ -99,10 +109,8 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
 
 const styles = StyleSheet.create({
   wrapper: {
-    paddingHorizontal: spacing.xl,
+    paddingHorizontal: spacing.lg,
     paddingTop: spacing.sm,
-    zIndex: 10,
-    elevation: 10,
   },
   bar: {
     flexDirection: 'row',
@@ -111,22 +119,22 @@ const styles = StyleSheet.create({
     borderRadius: radius.full,
     borderWidth: 1,
     paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
   },
   tabButton: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    height: 44,
+    height: 48,
   },
   pill: {
     position: 'absolute',
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
   },
   icon: {
-    fontSize: 20,
-    lineHeight: 22,
+    fontSize: 21,
+    lineHeight: 24,
   },
 });

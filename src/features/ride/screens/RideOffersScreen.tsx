@@ -3,6 +3,7 @@ import { Alert, FlatList, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Button } from '@components/atoms/Button';
+import { ScreenHeader } from '@components/molecules/ScreenHeader';
 import { VeloraText } from '@components/atoms/VeloraText';
 import { useTheme } from '@hooks/useTheme';
 import { useAppDispatch, useAppSelector } from '@hooks/useAppDispatch';
@@ -35,6 +36,8 @@ export function RideOffersScreen({ navigation, route }: Props) {
     try {
       const data = await fetchRideOffers(rideId);
       setOffers(data);
+    } catch {
+      setOffers([]);
     } finally {
       setLoading(false);
     }
@@ -81,12 +84,13 @@ export function RideOffersScreen({ navigation, route }: Props) {
   };
 
   return (
-    <View style={[styles.flex, { backgroundColor: theme.colors.background, paddingTop: insets.top + spacing.lg }]}>
-      <View style={styles.header}>
-        <VeloraText variant="h2">Driver offers</VeloraText>
-        <VeloraText variant="caption" color={theme.colors.textSecondary}>
-          Compare fares from nearby drivers and pick the best one — just like haggling for a fair price.
-        </VeloraText>
+    <View style={[styles.flex, { backgroundColor: theme.colors.background }]}>
+      <View style={{ paddingHorizontal: spacing.xxl, paddingTop: insets.top + spacing.sm }}>
+        <ScreenHeader
+          title="Driver offers"
+          subtitle="Compare fares from nearby drivers and pick the best one."
+          onBack={() => navigation.goBack()}
+        />
       </View>
 
       <FlatList
@@ -143,7 +147,6 @@ export function RideOffersScreen({ navigation, route }: Props) {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   center: { alignItems: 'center', justifyContent: 'center' },
-  header: { paddingHorizontal: spacing.xxl, marginBottom: spacing.lg, gap: spacing.xs },
   list: { paddingHorizontal: spacing.xxl, paddingBottom: spacing.xxl },
   empty: { textAlign: 'center', marginTop: spacing.huge },
   card: { padding: spacing.lg, borderRadius: radius.lg, borderWidth: 1, marginBottom: spacing.md },

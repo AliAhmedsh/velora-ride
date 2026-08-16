@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { VeloraText } from '@components/atoms/VeloraText';
 import { useTheme } from '@hooks/useTheme';
 import type { PaymentMethod } from '../../types/booking';
@@ -26,8 +26,10 @@ export function PaymentMethodPicker({ value, onChange }: Props) {
       {OPTIONS.map(opt => {
         const selected = value === opt.id;
         return (
-          <Pressable
+          <TouchableOpacity
             key={opt.id}
+            activeOpacity={0.85}
+            delayPressIn={0}
             onPress={() => onChange(opt.id)}
             style={[
               styles.chip,
@@ -39,7 +41,7 @@ export function PaymentMethodPicker({ value, onChange }: Props) {
             <VeloraText variant="caption" color={selected ? theme.colors.primary : theme.colors.textSecondary}>
               {opt.label}
             </VeloraText>
-          </Pressable>
+          </TouchableOpacity>
         );
       })}
     </View>

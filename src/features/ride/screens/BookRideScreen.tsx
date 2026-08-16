@@ -1,126 +1,126 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   TextInput,
-  useWindowDimensions,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Button } from '@components/atoms/Button';
 import { VeloraText } from '@components/atoms/VeloraText';
+import { ScreenHeader } from '@components/molecules/ScreenHeader';
+import { LocalDestinationField } from '@components/molecules/LocalDestinationField';
+import { PaymentMethodPicker } from '@components/molecules/PaymentMethodPicker';
+import { VehicleCategoryPicker } from '@components/molecules/VehicleCategoryPicker';
 import { RideMap } from '@components/organisms/RideMap';
-import { DestinationPicker } from '@components/organisms/DestinationPicker';
 import { useTheme } from '@hooks/useTheme';
 import { useUserLocation } from '@hooks/useUserLocation';
 import { useAppDispatch } from '@hooks/useAppDispatch';
 import { requestRide } from '@store';
 import { MainStackParamList } from '@navigation/types';
 import { spacing, radius, shadow } from '@theme/spacing';
-import {
-  detectNearestCity,
-  distanceKm,
-  LOCAL_MAX_DISTANCE_KM,
-  type DestinationOption,
-} from '@utils/locations';
-import { PaymentMethodPicker } from '@components/molecules/PaymentMethodPicker';
-import { RideOptionsPanel } from '@components/molecules/RideOptionsPanel';
-import {
-  buildSpecialRequirements,
-  DEFAULT_RIDE_EXTRAS,
-  RideExtrasPicker,
-} from '@components/molecules/RideExtrasPicker';
+import { getRideServiceType } from '../../../data/rideServiceTypes';
 import {
   calculateFare,
   formatFare,
+  getLocalRideDistanceError,
   validateCustomerOffer,
 } from '../../../services/fareEngine';
+import { reverseGeocode } from '../../../services/placesService';
 import { getRideErrorMessage } from '../../../utils/rideErrors';
-import type { AcPreference, BookingRequest, PaymentMethod, ServiceType } from '../../../types/booking';
-import type { PromoApplication } from '../../../services/promoService';
+import type { BookingRequest, PaymentMethod } from '../../../types/booking';
+import type { RideLocation } from '../../../types/ride';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'BookRide'>;
 
 export function BookRideScreen({ navigation }: Props) {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
-  const { height: windowHeight } = useWindowDimensions();
   const dispatch = useAppDispatch();
-  const { location: pickup, loading: pickupLoading } = useUserLocation();
-  const [dropoff, setDropoff] = useState<DestinationOption | null>(null);
-  const [customerOffer, setCustomerOffer] = useState('');
+  const { location: pickup, loading: locLoading } = useUserLocation();
+
+  const [dropoff, setDropoff] = useState<RideLocation | null>(null);
+  const [vehicleSlug, setVehicleSlug] = useState<string | null>(null);
+  const [vehicleMultiplier, setVehicleMultiplier] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
+  const [customerOffer, setCustomerOffer] = useState('');
   const [booking, setBooking] = useState(false);
-  const [rideExtras, setRideExtras] = useState(DEFAULT_RIDE_EXTRAS);
-  const [serviceOverride, setServiceOverride] = useState<ServiceType | 'auto'>('auto');
-  const [womenOnly, setWomenOnly] = useState(false);
-  const [acPreference, setAcPreference] = useState<AcPreference>('any');
-  const [promoApplication, setPromoApplication] = useState<PromoApplication | null>(null);
+  const [mapLoading, setMapLoading] = useState(false);
 
-  const tripKm = pickup && dropoff ? distanceKm(pickup, dropoff) : 0;
-  const isLongTrip = tripKm > LOCAL_MAX_DISTANCE_KM;
-
-  const effectiveService: ServiceType =
-    serviceOverride === 'auto' ? (isLongTrip ? 'city_to_city' : 'local') : serviceOverride;
-
-  const breakdown =
-    pickup && dropoff
-      ? calculateFare(pickup, dropoff, { serviceType: effectiveService })
-      : null;
-
-  const serviceBlocked = serviceOverride === 'local' && isLongTrip;
+  const breakdown = useMemo(() => {
+    if (!pickup || !dropoff) return null;
+    return calculateFare(pickup, dropoff, {
+      serviceType: 'local',
+      vehicleMultiplier,
+    });
+  }, [pickup, dropoff, vehicleMultiplier]);
 
   useEffect(() => {
-    setDropoff(null);
-    setServiceOverride('auto');
-  }, [pickup?.latitude, pickup?.longitude]);
+    if (breakdown) {
+      setCustomerOffer(String(breakdown.recommendedFare));
+    }
+  }, [breakdown?.recommendedFare, dropoff?.latitude, dropoff?.longitude, vehicleSlug]);
 
-  useEffect(() => {
-    if (breakdown) setCustomerOffer(String(breakdown.recommendedFare));
-  }, [breakdown?.recommendedFare]);
+  const handleMapPress = useCallback(async (coord: { latitude: number; longitude: number }) => {
+    setMapLoading(true);
+    try {
+      const address = (await reverseGeocode(coord.latitude, coord.longitude)) ?? 'Selected on map';
+      setDropoff({
+        latitude: coord.latitude,
+        longitude: coord.longitude,
+        address,
+      });
+    } finally {
+      setMapLoading(false);
+    }
+  }, []);
 
   const handleBook = async () => {
-    if (!pickup || !dropoff || !breakdown) {
-      Alert.alert('Select destination', 'Choose where you want to go first.');
+    if (!pickup) {
+      Alert.alert('Location', 'Enable location to set your pickup point.');
+      return;
+    }
+    if (!dropoff) {
+      Alert.alert('Destination', 'Search or tap the map to choose where you are going.');
+      return;
+    }
+    if (!vehicleSlug) {
+      Alert.alert('Select vehicle', 'Choose Car, Mini Car, Rickshaw, Bike, Chingchi, or AC Car.');
       return;
     }
 
-    if (serviceBlocked) {
+    const distanceError = getLocalRideDistanceError(pickup, dropoff);
+    if (distanceError) {
+      Alert.alert('Long trip', distanceError);
+      return;
+    }
+
+    const recommendedFare = breakdown?.recommendedFare ?? 500;
+    const offer = parseInt(customerOffer, 10);
+    if (Number.isNaN(offer) || !validateCustomerOffer(recommendedFare, offer)) {
       Alert.alert(
-        'Too far for local ride',
-        `This trip is ${tripKm.toFixed(0)} km. Switch to City to City or pick a nearer destination (under ${LOCAL_MAX_DISTANCE_KM} km).`,
+        'Set your fare',
+        `Enter at least ${formatFare(recommendedFare)}. You can offer more — drivers may counter-offer.`,
       );
       return;
     }
 
-    const offer = parseInt(customerOffer, 10);
-    if (Number.isNaN(offer) || !validateCustomerOffer(breakdown.recommendedFare, offer)) {
-      Alert.alert('Invalid offer', 'Enter a valid amount at least the recommended minimum fare.');
-      return;
-    }
-
-    const originCity = detectNearestCity(pickup);
-    const destinationCity = dropoff.city ?? detectNearestCity(dropoff);
-
+    const rideType = getRideServiceType(vehicleSlug);
     const request: BookingRequest = {
-      serviceType: effectiveService,
+      serviceType: 'local',
       pickup,
       dropoff,
-      recommendedFare: breakdown.recommendedFare,
+      recommendedFare,
       customerOffer: offer,
-      paymentMethod: paymentMethod === 'card' ? 'wallet' : paymentMethod,
-      originCity: effectiveService === 'city_to_city' ? originCity : undefined,
-      destinationCity: effectiveService === 'city_to_city' ? destinationCity : undefined,
-      specialRequirements: buildSpecialRequirements(rideExtras),
-      womenOnly,
-      acPreference,
-      promoCode: promoApplication?.promo.code,
+      vehicleCategorySlug: vehicleSlug,
+      paymentMethod,
+      negotiationEnabled: true,
+      specialRequirements: rideType ? `Ride type: ${rideType.name}` : undefined,
     };
 
     setBooking(true);
@@ -134,211 +134,157 @@ export function BookRideScreen({ navigation }: Props) {
     }
   };
 
-  const mapHeight = Math.min(windowHeight * 0.32, 280);
-  const confirmLabel =
-    effectiveService === 'city_to_city'
-      ? `Confirm city to city · ${formatFare(breakdown?.recommendedFare ?? 0)}`
-      : `Confirm local ride · ${formatFare(breakdown?.recommendedFare ?? 0)}`;
+  if (locLoading || !pickup) {
+    return (
+      <View style={[styles.center, { backgroundColor: theme.colors.background }]}>
+        <ActivityIndicator color={theme.colors.primary} />
+      </View>
+    );
+  }
 
   return (
-    <KeyboardAvoidingView
-      style={[styles.flex, { backgroundColor: theme.colors.background }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={insets.top}>
-      <View style={[styles.mapWrap, { height: mapHeight }]}>
-        {pickupLoading || !pickup ? (
-          <View style={styles.loading}>
-            <ActivityIndicator color={theme.colors.primary} />
-          </View>
-        ) : (
-          <RideMap pickup={pickup} dropoff={dropoff} />
-        )}
+    <View style={[styles.root, { backgroundColor: theme.colors.background }]}>
+      <View style={{ paddingHorizontal: spacing.lg }}>
+        <ScreenHeader
+          title="Local ride"
+          subtitle="Pick destination on map · choose vehicle · set fare"
+          onBack={() => navigation.goBack()}
+        />
       </View>
 
-      <View style={[styles.sheet, shadow.lg, { backgroundColor: theme.colors.card }]}>
+      <View style={styles.mapArea}>
+        <RideMap
+          pickup={pickup}
+          dropoff={dropoff}
+          showsUserLocation
+          onMapPress={handleMapPress}
+          fullBleed
+        />
+        {mapLoading ? (
+          <View style={styles.mapOverlay}>
+            <VeloraText variant="caption" color={theme.colors.white}>
+              Getting address…
+            </VeloraText>
+          </View>
+        ) : null}
+      </View>
+
+      <KeyboardAvoidingView
+        style={styles.sheetWrap}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={insets.top + 56}>
         <ScrollView
-          style={styles.scroll}
+          style={[styles.sheet, { backgroundColor: theme.colors.surface }]}
           contentContainerStyle={{
-            paddingHorizontal: spacing.xxl,
-            paddingTop: spacing.lg,
-            paddingBottom: spacing.md,
+            padding: spacing.lg,
+            paddingBottom: insets.bottom + spacing.xl,
           }}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}>
-          <Pressable onPress={() => navigation.goBack()} hitSlop={12}>
-            <VeloraText variant="label" color={theme.colors.primary}>← Back</VeloraText>
-          </Pressable>
-          <VeloraText variant="h3" style={styles.title}>Book a ride</VeloraText>
-          <VeloraText variant="caption" color={theme.colors.textSecondary} numberOfLines={2}>
-            From: {pickup?.address ?? 'Getting location…'}
+          keyboardShouldPersistTaps="handled">
+          <VeloraText variant="caption" color={theme.colors.textSecondary}>
+            Pickup: {pickup.address}
           </VeloraText>
 
-          <View style={styles.serviceRow}>
-            <Pressable
-              onPress={() => setServiceOverride('local')}
+          <LocalDestinationField value={dropoff} onChange={setDropoff} pickup={pickup} />
+
+          {breakdown ? (
+            <VeloraText variant="caption" color={theme.colors.textSecondary} style={styles.meta}>
+              ~{breakdown.distanceKm} km · ~{breakdown.durationMin} min · min {formatFare(breakdown.recommendedFare)}
+            </VeloraText>
+          ) : null}
+
+          <VehicleCategoryPicker
+            value={vehicleSlug}
+            serviceType="local"
+            onChange={(slug, multiplier) => {
+              setVehicleSlug(slug);
+              setVehicleMultiplier(multiplier);
+            }}
+          />
+
+          <View
+            style={[
+              styles.fareCard,
+              shadow.sm,
+              { backgroundColor: theme.colors.card, borderColor: theme.colors.border },
+            ]}>
+            <VeloraText variant="label" color={theme.colors.textSecondary}>
+              Your fare (PKR)
+            </VeloraText>
+            <TextInput
+              value={customerOffer}
+              onChangeText={setCustomerOffer}
+              keyboardType="number-pad"
               style={[
-                styles.serviceChip,
+                styles.fareInput,
                 {
-                  borderColor: effectiveService === 'local' ? theme.colors.primary : theme.colors.border,
-                  backgroundColor:
-                    effectiveService === 'local' ? theme.colors.primary + '14' : theme.colors.surface,
+                  borderColor: theme.colors.border,
+                  color: theme.colors.text,
+                  backgroundColor: theme.colors.surface,
                 },
-              ]}>
-              <VeloraText
-                variant="caption"
-                color={effectiveService === 'local' ? theme.colors.primary : theme.colors.textSecondary}>
-                Local (≤{LOCAL_MAX_DISTANCE_KM} km)
-              </VeloraText>
-            </Pressable>
-            <Pressable
-              onPress={() => setServiceOverride('city_to_city')}
-              style={[
-                styles.serviceChip,
-                {
-                  borderColor:
-                    effectiveService === 'city_to_city' ? theme.colors.primary : theme.colors.border,
-                  backgroundColor:
-                    effectiveService === 'city_to_city' ? theme.colors.primary + '14' : theme.colors.surface,
-                },
-              ]}>
-              <VeloraText
-                variant="caption"
-                color={
-                  effectiveService === 'city_to_city' ? theme.colors.primary : theme.colors.textSecondary
-                }>
-                City to City
-              </VeloraText>
-            </Pressable>
-            <Pressable onPress={() => setServiceOverride('auto')}>
-              <VeloraText variant="caption" color={theme.colors.textMuted}>Auto</VeloraText>
-            </Pressable>
+              ]}
+              placeholder="Enter your offer"
+              placeholderTextColor={theme.colors.textMuted}
+            />
           </View>
 
-          {isLongTrip && effectiveService === 'city_to_city' && (
-            <View style={[styles.banner, { backgroundColor: theme.colors.accent + '22' }]}>
-              <VeloraText variant="caption" color={theme.colors.primary}>
-                Long trip ({tripKm.toFixed(0)} km) — priced as City to City inter-city ride.
-              </VeloraText>
-            </View>
-          )}
-
-          {serviceBlocked && (
-            <View style={[styles.banner, { backgroundColor: theme.colors.error + '18' }]}>
-              <VeloraText variant="caption" color={theme.colors.error}>
-                Local rides max {LOCAL_MAX_DISTANCE_KM} km. Use City to City or pick a closer place.
-              </VeloraText>
-            </View>
-          )}
-
-          {pickup ? (
-            <DestinationPicker pickup={pickup} selected={dropoff} onSelect={setDropoff} />
-          ) : null}
-
-          {dropoff ? (
-            <View style={[styles.destCard, { borderColor: theme.colors.border }]}>
-              <VeloraText variant="label" color={theme.colors.textSecondary}>Going to</VeloraText>
-              <VeloraText variant="bodyMedium">{dropoff.address}</VeloraText>
-            </View>
-          ) : null}
-
-          {breakdown && (
-            <View style={styles.fareBox}>
-              <VeloraText variant="caption" color={theme.colors.textSecondary}>
-                {breakdown.distanceKm} km · ~{breakdown.durationMin} min · {effectiveService.replace('_', ' ')}
-              </VeloraText>
-              <VeloraText variant="bodyMedium">
-                Minimum fare: {formatFare(breakdown.recommendedFare)}
-              </VeloraText>
-              <VeloraText variant="caption" color={theme.colors.textMuted}>
-                You may offer higher — not lower
-              </VeloraText>
-              <TextInput
-                value={customerOffer}
-                onChangeText={setCustomerOffer}
-                keyboardType="number-pad"
-                style={[
-                  styles.input,
-                  {
-                    borderColor: theme.colors.border,
-                    color: theme.colors.text,
-                    backgroundColor: theme.colors.surface,
-                  },
-                ]}
-                placeholder="Your offer (PKR)"
-                placeholderTextColor={theme.colors.textMuted}
-              />
-            </View>
-          )}
-
+          <VeloraText variant="label" color={theme.colors.textSecondary} style={styles.paymentLabel}>
+            Payment
+          </VeloraText>
           <PaymentMethodPicker value={paymentMethod} onChange={setPaymentMethod} />
-          <RideExtrasPicker value={rideExtras} onChange={setRideExtras} />
-          {breakdown && (
-            <RideOptionsPanel
-              fare={parseInt(customerOffer, 10) || breakdown.recommendedFare}
-              womenOnly={womenOnly}
-              onWomenOnlyChange={setWomenOnly}
-              acPreference={acPreference}
-              onAcPreferenceChange={setAcPreference}
-              onPromoApplied={setPromoApplication}
-            />
-          )}
-        </ScrollView>
 
-        <View
-          style={[
-            styles.footer,
-            {
-              borderTopColor: theme.colors.border,
-              paddingBottom: insets.bottom + spacing.md,
-              backgroundColor: theme.colors.card,
-            },
-          ]}>
           <Button
-            label={dropoff ? confirmLabel : 'Select a destination'}
+            label={
+              booking
+                ? 'Requesting…'
+                : `Request ride · ${formatFare(parseInt(customerOffer, 10) || breakdown?.recommendedFare || 0)}`
+            }
             fullWidth
             loading={booking}
-            disabled={!dropoff || serviceBlocked}
+            disabled={!dropoff || !vehicleSlug}
             onPress={handleBook}
+            style={{ marginTop: spacing.lg }}
           />
-        </View>
-      </View>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  mapWrap: { width: '100%' },
-  loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  sheet: { flex: 1, borderTopLeftRadius: radius.xxl, borderTopRightRadius: radius.xxl },
-  scroll: { flex: 1 },
-  title: { marginVertical: spacing.sm },
-  serviceRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.sm },
-  serviceChip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.full,
-    borderWidth: 1,
+  root: { flex: 1 },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  mapArea: {
+    flex: 1,
+    minHeight: 280,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.sm,
   },
-  banner: { padding: spacing.md, borderRadius: radius.md, marginTop: spacing.sm },
-  destCard: {
-    marginTop: spacing.md,
+  mapOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radius.lg,
+  },
+  sheetWrap: { maxHeight: '50%' },
+  sheet: {
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
+  },
+  meta: { marginTop: spacing.sm },
+  fareCard: {
+    marginTop: spacing.lg,
     padding: spacing.md,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     borderWidth: 1,
     gap: spacing.xs,
   },
-  fareBox: { marginTop: spacing.lg, gap: spacing.xs },
-  input: {
+  fareInput: {
     borderWidth: 1,
     borderRadius: radius.md,
     padding: spacing.md,
-    marginTop: spacing.sm,
     minHeight: 48,
+    fontSize: 16,
   },
-  footer: {
-    paddingHorizontal: spacing.xxl,
-    paddingTop: spacing.md,
-    borderTopWidth: StyleSheet.hairlineWidth,
-  },
+  paymentLabel: { marginTop: spacing.lg, marginBottom: spacing.xs },
 });

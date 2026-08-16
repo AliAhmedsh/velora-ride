@@ -106,9 +106,9 @@ export function RideOptionsPanel({
           onPress={handleApplyPromo}
           style={[styles.applyBtn, { backgroundColor: theme.colors.primary }]}>
           {applying ? (
-            <ActivityIndicator color={theme.colors.textOnPrimary} size="small" />
+            <ActivityIndicator color={theme.colors.white} size="small" />
           ) : (
-            <VeloraText variant="label" color={theme.colors.textOnPrimary}>Apply</VeloraText>
+            <VeloraText variant="label" color={theme.colors.white}>Apply</VeloraText>
           )}
         </Pressable>
       </View>

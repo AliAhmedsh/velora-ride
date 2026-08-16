@@ -98,7 +98,7 @@ export function ChatScreen({ navigation, route }: Props) {
         <Pressable
           onPress={handleSend}
           style={[styles.sendBtn, { backgroundColor: theme.colors.primary }]}>
-          <VeloraText variant="label" color={theme.colors.textOnPrimary}>Send</VeloraText>
+          <VeloraText variant="label" color={theme.colors.white}>Send</VeloraText>
         </Pressable>
       </View>
     </KeyboardAvoidingView>

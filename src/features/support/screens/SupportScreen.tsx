@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, FlatList, Linking, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { ScreenHeader } from '@components/molecules/ScreenHeader';
 import { Button } from '@components/atoms/Button';
 import { Input } from '@components/atoms/Input';
 import { VeloraText } from '@components/atoms/VeloraText';
@@ -72,11 +73,8 @@ export function SupportScreen({ navigation }: Props) {
       keyExtractor={item => item.id}
       ListHeaderComponent={
         <View>
-          <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
-            <Pressable onPress={() => navigation.goBack()}>
-              <VeloraText variant="label" color={theme.colors.primary}>← Back</VeloraText>
-            </Pressable>
-            <VeloraText variant="h2" style={styles.title}>Help & Support</VeloraText>
+          <View style={[styles.content, { paddingTop: spacing.md }]}>
+            <ScreenHeader title="Help & Support" onBack={() => navigation.goBack()} />
           </View>
 
           <View style={styles.content}>
@@ -94,7 +92,9 @@ export function SupportScreen({ navigation }: Props) {
             <Pressable
               onPress={() => Linking.openURL('mailto:support@velora.app')}
               style={[styles.card, shadow.sm, { backgroundColor: theme.colors.accent }]}>
-              <VeloraText variant="bodyMedium" color={theme.colors.textOnPrimary}>Email support@velora.app</VeloraText>
+              <VeloraText variant="bodyMedium" color={theme.colors.text}>
+                Email support@velora.app
+              </VeloraText>
             </Pressable>
 
             <VeloraText variant="h3" style={styles.sectionTitle}>My tickets</VeloraText>
